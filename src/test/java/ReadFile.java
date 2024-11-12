@@ -1,9 +1,9 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,23 +31,33 @@ public class ReadFile {
             return contents;
         }
 
-        for (File file : files) {
-            if (file.isFile()) {
-                StringBuilder content = new StringBuilder();
-                try (Scanner input = new Scanner(file)) {
-                    while (input.hasNextLine()) {
-                        content.append(input.nextLine()).append("\n");
+        try {
+            String canonicalFolderPath = folder.getCanonicalPath();
+
+            for (File file : files) {
+                if (file.isFile()) {
+                    String canonicalFilePath = file.getCanonicalPath();
+                    if (!canonicalFilePath.startsWith(canonicalFolderPath)) {
+                        logger.log(Level.SEVERE, "File path is outside the folder: " + file.getName());
+                        continue;
                     }
-                } catch (NoSuchElementException e) {
-                    logger.log(Level.SEVERE, "File improperly formed: " + file.getName(), e);
-                } catch (IllegalStateException e) {
-                    logger.log(Level.SEVERE, "Error reading from file: " + file.getName(), e);
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "IO Exception while reading file: " + file.getName(), e);
+
+                    StringBuilder content = new StringBuilder();
+                    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            content.append(line).append("\n");
+                        }
+                    } catch (IOException e) {
+                        logger.log(Level.SEVERE, "IO Exception while reading file: " + file.getName(), e);
+                    }
+                    contents.put(file.getName(), content.toString());
                 }
-                contents.put(file.getName(), content.toString());
             }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "IO Exception while processing folder: " + folderPath, e);
         }
+
         return contents;
     }
 }

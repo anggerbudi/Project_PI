@@ -1,9 +1,9 @@
-public class TermInfo implements Comparable<TermInfo> {
+public class ObjectTermInfo implements Comparable<ObjectTermInfo> {
     
     private final String term;
     private int documentFrequency;
     
-    public TermInfo(String term) {
+    public ObjectTermInfo(String term) {
         this.term = term;
         this.documentFrequency = 0;
     }
@@ -21,7 +21,7 @@ public class TermInfo implements Comparable<TermInfo> {
     }
     
     @Override
-    public int compareTo(TermInfo other) {
+    public int compareTo(ObjectTermInfo other) {
         return term.compareTo(other.term);
     }
     
@@ -29,7 +29,7 @@ public class TermInfo implements Comparable<TermInfo> {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        TermInfo other = (TermInfo) obj;
+        ObjectTermInfo other = (ObjectTermInfo) obj;
         return term.equals(other.term);
     }
     

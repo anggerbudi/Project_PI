@@ -7,8 +7,8 @@ public class PostingList {
 
     private static final Logger logger = Logger.getLogger(PostingList.class.getName());
 
-    private final Map<String, TermInfo> termInfoMap;
-    private final Map<TermInfo, List<DocumentInfo>> invertedIndex;
+    private final Map<String, ObjectTermInfo> termInfoMap;
+    private final Map<ObjectTermInfo, List<ObjectDocumentInfo>> invertedIndex;
     private int totalDocuments;
 
     public PostingList() {
@@ -21,21 +21,21 @@ public class PostingList {
         totalDocuments++;
         try {
             for (String token : tokens) {
-                TermInfo termInfo = termInfoMap.computeIfAbsent(token, TermInfo::new);
+                ObjectTermInfo objectTermInfo = termInfoMap.computeIfAbsent(token, ObjectTermInfo::new);
 
-                List<DocumentInfo> documentInfos = invertedIndex.computeIfAbsent(termInfo, _ -> new ArrayList<>());
-
+                List<ObjectDocumentInfo> objectDocumentInfos = invertedIndex.computeIfAbsent(objectTermInfo, _ -> new LinkedList<>());
+                
                 boolean found = false;
-                for (DocumentInfo documentInfo : documentInfos) {
-                    if (documentInfo.getDocumentID().equals(documentID)) {
-                        documentInfo.incrementTF();
+                for (ObjectDocumentInfo objectDocumentInfo : objectDocumentInfos) {
+                    if (objectDocumentInfo.getDocumentID().equals(documentID)) {
+                        objectDocumentInfo.incrementTF();
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    documentInfos.add(new DocumentInfo(documentID));
-                    termInfo.incrementDocumentFrequency();
+                    objectDocumentInfos.add(new ObjectDocumentInfo(documentID));
+                    objectTermInfo.incrementDocumentFrequency();
                 }
             }
         } catch (Exception e) {
@@ -44,20 +44,27 @@ public class PostingList {
     }
 
     public void calculateTfidf() {
-        for (Map.Entry<TermInfo, List<DocumentInfo>> entry : invertedIndex.entrySet()) {
-            TermInfo termInfo = entry.getKey();
-            List<DocumentInfo> documentInfos = entry.getValue();
-            double idf = Math.log((double) totalDocuments / termInfo.getDocumentFrequency());
+        double idf;
+        for (Map.Entry<ObjectTermInfo, List<ObjectDocumentInfo>> entry : invertedIndex.entrySet()) {
+            ObjectTermInfo objectTermInfo = entry.getKey();
+            List<ObjectDocumentInfo> objectDocumentInfos = entry.getValue();
+            idf = Math.log((double) totalDocuments / objectTermInfo.getDocumentFrequency());
 
-            for (DocumentInfo documentInfo : documentInfos) {
-                double tf = documentInfo.getTF();
+            for (ObjectDocumentInfo objectDocumentInfo : objectDocumentInfos) {
+                double tf = objectDocumentInfo.getTF();
                 double tfidf = tf * idf;
-                documentInfo.setTFIDF(tfidf);
+                objectDocumentInfo.setTFIDF(tfidf);
             }
         }
     }
 
-    public Map<TermInfo, List<DocumentInfo>> getInvertedIndex() {
+    public Map<ObjectTermInfo, List<ObjectDocumentInfo>> getInvertedIndex() {
         return invertedIndex;
+    }
+    
+    public void sortDocumentIDs() {
+        for (List<ObjectDocumentInfo> documentIDs : invertedIndex.values()) {
+            documentIDs.sort(Comparator.comparing(ObjectDocumentInfo::getDocumentID));
+        }
     }
 }
